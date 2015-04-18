@@ -4,25 +4,49 @@ import java.util.Stack;
 
 public class DigitTrie {
 
+    class Node<T> {
+        Node<T>[] children;
+
+        public  Node(int size) {
+            this.children = new Node[size];
+        }
+    }
     private static final int BASE = 5;
-    private Object[] root;
+    private Node<Integer> root;
+
+    public DigitTrie() {
+        root = new Node<>(BASE);
+    }
 
     public void insert(int element){
         Integer[] digits = convertToKeys(element);
-        Object [] node = root;
+        Node<Integer> node = root;
 
         for(Integer digit : digits) {
-            if(node[digit] == null) {
-                node[digit] = new Object[BASE];
+            if(node.children[digit] == null) {
+                node.children[digit]  =  new Node(BASE);
             }
-            node = (Object[]) node[digit];
+            node = node.children[digit];
         }
+    }
+
+    public boolean exists(int value) {
+        Integer[] digits = convertToKeys(value);
+        Node<Integer> node = root;
+
+        for(Integer digit : digits) {
+            if(node.children[digit] == null) {
+                return false;
+            }
+            node = node.children[digit];
+        }
+        return (node != null);
     }
 
     protected Integer[] convertToKeys(int value){
         Stack<Integer> keys = new Stack<>();
         int num = value;
-        while( num/BASE > BASE) {
+        while( num >= BASE) {
            keys.push(num % BASE);
             num = num/BASE;
         }
@@ -31,8 +55,4 @@ public class DigitTrie {
         keys.toArray(res);
         return res;
     }
-
-
-
-
 }
