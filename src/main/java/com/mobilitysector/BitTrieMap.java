@@ -64,7 +64,7 @@ public class BitTrieMap implements Map<Object, Object> {
                 return false;
             }
             node = (Object[])node[index];
-            numberKey = numberKey >> BIT_PARTITION_SIZE;
+            numberKey = numberKey >>> BIT_PARTITION_SIZE;
             level++;
         }
         return node[index] != null;
