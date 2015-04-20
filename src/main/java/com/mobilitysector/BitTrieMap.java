@@ -1,8 +1,6 @@
 package com.mobilitysector;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.IntStream;
 
 public class BitTrieMap implements Map<Object, Object> {
@@ -49,34 +47,10 @@ public class BitTrieMap implements Map<Object, Object> {
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return Arrays.stream(root).map(it -> it == null).reduce(true, (acc, it) -> acc && it);
     }
 
-    @Override
-    public boolean containsKey(Object key) {
-        int numberKey = key.hashCode();
-        int level = 0;
-        Object[] node = root;
-        int index = 0;
-        while(level < DEPTH_OF_TREE ) {
-            index = numberKey & MASK;
-            if(node[index] == null) {
-                return false;
-            }
-            node = (Object[])node[index];
-            numberKey = numberKey >>> BIT_PARTITION_SIZE;
-            level++;
-        }
-        return node[index] != null;
-    }
-
-    @Override
-    public boolean containsValue(Object value) {
-        return false;
-    }
-
-    @Override
-    public Object get(Object key) {
+    protected Object getLeafNode(Object key){
         int numberKey = key.hashCode();
         int level = 0;
         Object[] node = root;
@@ -87,11 +61,26 @@ public class BitTrieMap implements Map<Object, Object> {
                 return null;
             }
             node = (Object[])node[index];
-            numberKey = numberKey >> BIT_PARTITION_SIZE;
+            numberKey = numberKey >>> BIT_PARTITION_SIZE;
             level++;
         }
         return node[index];
+    }
 
+    @Override
+    public boolean containsKey(Object key) {
+        Object node = getLeafNode(key);
+        return node != null;
+    }
+
+    @Override
+    public boolean containsValue(Object value) {
+        return false;
+    }
+
+    @Override
+    public Object get(Object key) {
+        return getLeafNode(key);
     }
 
     @Override
@@ -119,9 +108,10 @@ public class BitTrieMap implements Map<Object, Object> {
     }
 
     @Override
-    public void putAll(Map m) {
-
+    public void putAll(Map<?, ?> m) {
+        m.forEach(this::put);
     }
+
 
     @Override
     public void clear() {

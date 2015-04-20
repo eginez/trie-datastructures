@@ -24,6 +24,35 @@ public class BitTrieMapTest {
     }
 
     @Test
+    public void testBooleanMethods() {
+        BitTrieMap p = new BitTrieMap();
+        BitTrieMap p2 = new BitTrieMap();
+        Object obj = new Object();
+        p.put(obj, "hola");
+        assertEquals(false, p.isEmpty());
+        assertEquals(true, p2.isEmpty());
+        assertEquals(true, p.containsKey(obj));
+    }
+
+
+    @Test
+    public void testSameObject() {
+        BitTrieMap p = new BitTrieMap();
+        Object obj = new Object();
+        IntStream.range(1, 1000).forEach(it -> p.put(obj, it));
+        assertEquals(999, p.get(obj));
+
+    }
+    @Test
+    public void testIsEmpty() {
+        BitTrieMap p = new BitTrieMap();
+        assertEquals(true, p.isEmpty());
+        p.put(new Object(), "this is");
+        assertEquals(false, p.isEmpty());
+
+    }
+
+    @Test
     public void testInsetLimits(){
         BitTrieMap map = new BitTrieMap();
         map.put(Integer.MAX_VALUE, "test");
