@@ -7,12 +7,12 @@ import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
 
-public class BitTrieMapTest {
+public class SillyBitTrieMapTest {
 
 
     @Test
     public void testSimpleInsert() {
-        BitTrieMap map = new BitTrieMap();
+        SillyBitTrieMap map = new SillyBitTrieMap();
         map.put(0, "hi");
         map.put(24, "hell0");
         map.put(2530, "h2");
@@ -25,8 +25,8 @@ public class BitTrieMapTest {
 
     @Test
     public void testBooleanMethods() {
-        BitTrieMap p = new BitTrieMap();
-        BitTrieMap p2 = new BitTrieMap();
+        SillyBitTrieMap p = new SillyBitTrieMap();
+        SillyBitTrieMap p2 = new SillyBitTrieMap();
         Object obj = new Object();
         p.put(obj, "hola");
         assertEquals(false, p.isEmpty());
@@ -34,10 +34,18 @@ public class BitTrieMapTest {
         assertEquals(true, p.containsKey(obj));
     }
 
+    @Test
+    public void testGetValues() {
+        SillyBitTrieMap p = new SillyBitTrieMap();
+        p.put(new Object(), "hola");
+        p.put(new Object(), "chao");
+        assertEquals(2, p.values().size());
+    }
+
 
     @Test
     public void testSameObject() {
-        BitTrieMap p = new BitTrieMap();
+        SillyBitTrieMap p = new SillyBitTrieMap();
         Object obj = new Object();
         IntStream.range(1, 1000).forEach(it -> p.put(obj, it));
         assertEquals(999, p.get(obj));
@@ -45,7 +53,7 @@ public class BitTrieMapTest {
     }
     @Test
     public void testIsEmpty() {
-        BitTrieMap p = new BitTrieMap();
+        SillyBitTrieMap p = new SillyBitTrieMap();
         assertEquals(true, p.isEmpty());
         p.put(new Object(), "this is");
         assertEquals(false, p.isEmpty());
@@ -53,8 +61,17 @@ public class BitTrieMapTest {
     }
 
     @Test
+    public void testDelete() {
+        SillyBitTrieMap map = new SillyBitTrieMap();
+        Object obj = new Object();
+        map.put(obj, 1);
+        assertEquals(1, map.remove(obj));
+        assertEquals(true, map.isEmpty());
+    }
+
+    @Test
     public void testInsetLimits(){
-        BitTrieMap map = new BitTrieMap();
+        SillyBitTrieMap map = new SillyBitTrieMap();
         map.put(Integer.MAX_VALUE, "test");
         map.put(Integer.MIN_VALUE, "test2");
         assertEquals(map.get(Integer.MAX_VALUE), "test");
@@ -63,7 +80,7 @@ public class BitTrieMapTest {
 
     @Test
     public void testInsertIntOverflow() {
-        BitTrieMap map = new BitTrieMap();
+        SillyBitTrieMap map = new SillyBitTrieMap();
         map.put(Double.MAX_VALUE, "test");
         map.put(Double.MIN_VALUE, "test2");
         assertEquals(map.get(Double.MAX_VALUE), "test");
@@ -72,7 +89,7 @@ public class BitTrieMapTest {
 
     @Test
     public void testDoublePut() {
-        BitTrieMap map = new BitTrieMap();
+        SillyBitTrieMap map = new SillyBitTrieMap();
         map.put(Double.MAX_VALUE, "test");
         map.put(Double.MAX_VALUE, "test2");
         assertEquals(map.get(Double.MAX_VALUE), "test2");
@@ -80,7 +97,7 @@ public class BitTrieMapTest {
 
     @Test
     public void testObjectPut() {
-        BitTrieMap map = new BitTrieMap();
+        SillyBitTrieMap map = new SillyBitTrieMap();
         IntStream.range(0, 100).forEach(it -> map.put(String.format("key%d", it), it));
         assertEquals(map.get("key2"), 2);
     }
@@ -92,7 +109,7 @@ public class BitTrieMapTest {
     @Test
     @Ignore
     public void testInsertLotsOfObjects() {
-        BitTrieMap map = new BitTrieMap();
+        SillyBitTrieMap map = new SillyBitTrieMap();
         IntStream.range(0, 5 * (int)Math.pow(10,6)).forEach(it -> map.put(it, it));
     }
 }
