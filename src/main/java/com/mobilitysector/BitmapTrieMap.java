@@ -82,49 +82,77 @@ public class BitmapTrieMap {
     }
 
 
+    public Object get(Object key) {
+        return get(root, key, 0);
+    }
+
+    public Object get(Node node, Object key, int level) {
+        if(node instanceof ValueNode) {
+            ValueNode valueNode = (ValueNode)node;
+            return valueNode.value;
+        }
+
+        if(node instanceof InnerNode) {
+            InnerNode innerNode = (InnerNode) node;
+            int indexNew = calculateIndex(key.hashCode(), level);
+            int posNew = getPositionForIndex(indexNew, innerNode.bitmap);
+            return get(innerNode.children[posNew], key, level + 1);
+        }
+
+        return null;
+    }
+
+
     public Object put(Object key, Object value)  {
         return insert(root, key, value, 0);
     }
 
     protected Object insert( Node node, Object key, Object value, int level) {
         if(node instanceof InnerNode){
-            InnerNode innerNode = (InnerNode) node;
+            InnerNode parentNode = (InnerNode) node;
             int indexNew = calculateIndex(key.hashCode(), level);
-            int posNew = getPositionForIndex(indexNew, innerNode.bitmap);
-            if(innerNode.children != null && (innerNode.children[posNew] instanceof InnerNode )){
-                return insert(innerNode.children[posNew], key, value, level + 1);
+            int posNew = getPositionForIndex(indexNew, parentNode.bitmap);
+            //Is the node already occupied
+            if(((1<<indexNew) & parentNode.bitmap) >= 1){
+                //Push both nodes down a level
+                ValueNode vNode = (ValueNode)parentNode.children[posNew];
+                parentNode.children[posNew] = new InnerNode(parentNode);
+                insert(parentNode.children[posNew], vNode.key, vNode.value, level + 1);
+                return insert(parentNode.children[posNew], key, value, level + 1);
             }
 
             //Enable the bits in the bitmap
-            innerNode.bitmap |= (1 << indexNew);
-            int prevLen = innerNode.children != null ? innerNode.children.length : 0;
+            parentNode.bitmap |= (1 << indexNew);
+            int prevLen = parentNode.children != null ? parentNode.children.length : 0;
             Node[] newChildren = new Node[prevLen + 1];
-            if(posNew != 0 && innerNode.children != null) {
-                System.arraycopy(innerNode.children, 0, newChildren, 0, posNew - 1);
+            if(posNew != 0 && parentNode.children != null) {
+                System.arraycopy(parentNode.children, 0, newChildren, 0, Math.max(posNew - 1, 1));
             }
-            newChildren[posNew] = new ValueNode(innerNode, key, value);
-            if(posNew == 0 || innerNode.children == null) {
-                if(innerNode.children != null) {
-                    System.arraycopy(innerNode.children, posNew+1, newChildren, posNew+1, innerNode.children.length-1);
+            newChildren[posNew] = new ValueNode(parentNode, key, value);
+            if(posNew == 0 || parentNode.children == null) {
+                if(parentNode.children != null) {
+                    System.arraycopy(parentNode.children, posNew+1, newChildren, posNew+1, parentNode.children.length-1);
                 }
             } else {
-                int newlen =  innerNode.children.length - posNew - 1;
-                System.arraycopy(innerNode.children, posNew+1, newChildren, posNew+1, newlen);
+                System.arraycopy(parentNode.children, 0, newChildren, posNew - 1, parentNode.children.length-1);
             }
 
-            logger.log(Level.INFO, "Inner bitmap at level is: {0}", Integer.toBinaryString( innerNode.bitmap));
-            innerNode.children = newChildren;
+            logger.log(Level.INFO, "Inner bitmap at level={0} is= {1}", asArray(level, Integer.toBinaryString(parentNode.bitmap)));
+            parentNode.children = newChildren;
             return key;
         }
         return null;
     }
 
+
     protected int calculateIndex(int key, int level) {
         return (key >>> (level * partitionSize)) & mask;
     }
     protected int getPositionForIndex(int index, int bitmap) {
-        int bits = ((1 << index) & bitmap) | bitmap;
-        return Integer.bitCount(bits);
+        //bug here index = 1, bitmap = 1
+        int bits = (calculateMask(index + 1) & bitmap) | (1<<index);
+        //int bits = bitmap & (calculateMask(index));
+        return Math.max(0, Integer.bitCount(bits) - 1);
     }
 
     protected Node getRoot() {
@@ -132,7 +160,13 @@ public class BitmapTrieMap {
     }
 
     protected int calculateMask(int partitionSize){
+        //It would be better to shift right all a byte full of 1's
+        //eg 11111 >> 2
         return IntStream.range(0, partitionSize).reduce(0, (acc, val) -> acc + (1<<val));
+    }
+
+    private Object[] asArray(Object... args){
+        return args;
     }
 
 }
