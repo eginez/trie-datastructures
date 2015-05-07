@@ -108,6 +108,9 @@ public class BitmapTrieMap {
     }
 
     protected Object insert( Node node, Object key, Object value, int level) {
+        if(level > depth) {
+            assert false;
+        }
         if(node instanceof InnerNode){
             InnerNode parentNode = (InnerNode) node;
             int indexNew = calculateIndex(key.hashCode(), level);
@@ -115,10 +118,19 @@ public class BitmapTrieMap {
             //Is the node already occupied
             if(((1<<indexNew) & parentNode.bitmap) >= 1){
                 //Push both nodes down a level
-                ValueNode vNode = (ValueNode)parentNode.children[posNew];
-                parentNode.children[posNew] = new InnerNode(parentNode);
-                insert(parentNode.children[posNew], vNode.key, vNode.value, level + 1);
-                return insert(parentNode.children[posNew], key, value, level + 1);
+                if(parentNode.children[posNew] instanceof ValueNode) {
+                    ValueNode vNode = (ValueNode) parentNode.children[posNew];
+                    //same element?
+                    if(vNode.key == key) {
+                        vNode.value = value;
+                        return key;
+                    }
+                    parentNode.children[posNew] = new InnerNode(parentNode);
+                    insert(parentNode.children[posNew], vNode.key, vNode.value, level + 1);
+                    return insert(parentNode.children[posNew], key, value, level + 1);
+                } else {
+                    return insert(parentNode.children[posNew], key, value, level + 1);
+                }
             }
 
             //Enable the bits in the bitmap
@@ -126,15 +138,16 @@ public class BitmapTrieMap {
             int prevLen = parentNode.children != null ? parentNode.children.length : 0;
             Node[] newChildren = new Node[prevLen + 1];
             if(posNew != 0 && parentNode.children != null) {
-                System.arraycopy(parentNode.children, 0, newChildren, 0, Math.max(posNew - 1, 1));
+                System.arraycopy(parentNode.children, 0, newChildren, 0, posNew);
             }
             newChildren[posNew] = new ValueNode(parentNode, key, value);
             if(posNew == 0 || parentNode.children == null) {
                 if(parentNode.children != null) {
-                    System.arraycopy(parentNode.children, posNew+1, newChildren, posNew+1, parentNode.children.length-1);
+                    //bug here when copying elements to the left
+                    System.arraycopy(parentNode.children, posNew, newChildren, posNew+1, parentNode.children.length);
                 }
             } else {
-                System.arraycopy(parentNode.children, 0, newChildren, posNew - 1, parentNode.children.length-1);
+                //System.arraycopy(parentNode.children, posNew+1, newChildren, posNew+1, parentNode.children.length-posNew);
             }
 
             logger.log(Level.INFO, "Inner bitmap at level={0} is= {1}", asArray(level, Integer.toBinaryString(parentNode.bitmap)));
@@ -149,9 +162,7 @@ public class BitmapTrieMap {
         return (key >>> (level * partitionSize)) & mask;
     }
     protected int getPositionForIndex(int index, int bitmap) {
-        //bug here index = 1, bitmap = 1
         int bits = (calculateMask(index + 1) & bitmap) | (1<<index);
-        //int bits = bitmap & (calculateMask(index));
         return Math.max(0, Integer.bitCount(bits) - 1);
     }
 

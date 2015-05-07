@@ -1,7 +1,15 @@
 package com.mobilitysector;
 
+import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.Random;
+
+import static java.util.stream.IntStream.of;
 import static org.junit.Assert.*;
+
+import static java.util.stream.IntStream.range;
 
 public class BitmapTrieMapTest {
 
@@ -79,4 +87,38 @@ public class BitmapTrieMapTest {
         m.put(key, "dos");
         assertEquals("dos", m.get(key));
     }
+
+    @Test
+    @Ignore
+    public void testAlot() {
+        BitmapTrieMap m = new BitmapTrieMap();
+        range(1, 1000).forEach(i -> m.put(i, i));
+        assertEquals(999, m.get(999));
+    }
+
+    @Test
+    @Ignore
+    public void testSame() {
+        BitmapTrieMap m = new BitmapTrieMap();
+        range(1, 1000).forEach(i -> m.put(1, i));
+        assertEquals(999, m.get(1));
+    }
+
+
+    @Test
+    public void testRandom() {
+        Random r = new Random();
+        BitmapTrieMap m = new BitmapTrieMap();
+        int[] keys = new int[1000];
+        for (int i = 0; i < 1000 ; i++) {
+            keys[i]  = r.nextInt(10000);
+            m.put(keys[i], keys[i]);
+        }
+
+        Arrays.stream(keys).forEach(i -> assertEquals(i, m.get(i)));
+
+
+
+    }
+
 }
